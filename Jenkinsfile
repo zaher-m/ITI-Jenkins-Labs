@@ -1,82 +1,73 @@
-pipeline {
-    agent {
-        node { label "VM_Ubuntu" }
-    }
-    environment {
-        JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
-        IMAGE_NAME = "m1zaher/jenkins_day02"
-    }
-    tools {
-        maven 'maven-3.5.2'
-    }
+node('VM_Ubuntu') {
+    env.JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
+    env.IMAGE_NAME = 'm1zaher/jenkins_day02'
 
-    stages {
-        
-        stage('Build') {
+    def mvnPath = '/usr/bin/mvn'  // full path to executable
+
+    try {
+
+        stage('Checkout') {
             steps {
-                script {
-                    echo "Build Number: ${currentBuild.number}"
-                    if (currentBuild.number < 5) {
-                        error("Build number < 5. exiting...")
-                    }
-                }
+                // Explicitly checkout to ensure repo is cloned since, verify files stage shows only . , .. directories
+                checkout scm
+            }
+        }
+
+        // Verify the existence of Dockerfile
+        stage('Verify Files') {
+            sh 'ls -al'
+        }
+
+        stage('Build') {
+            echo "Build Number: ${currentBuild.number}"
+            if (currentBuild.number < 5) {
+                error("Build number < 5. Exiting...")
             }
         }
 
         stage('Docker Build') {
-            steps {
-                sh "docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ."
-            }
+            sh "docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ."
         }
 
         stage('Docker Login') {
-            steps {
-                 withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                    sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
-                }
+            withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
             }
         }
 
         stage('Docker Push') {
-            steps {
-                echo "Pushing Docker image ${IMAGE_NAME}:${BUILD_NUMBER}..."
-                sh "docker push ${IMAGE_NAME}:${BUILD_NUMBER}"
-            }
+            echo "Pushing Docker image ${IMAGE_NAME}:${BUILD_NUMBER}..."
+            sh "docker push ${IMAGE_NAME}:${BUILD_NUMBER}"
         }
 
         stage('Test') {
-            steps {
-                script {
-                    sh 'mvn test'
-                }
-            }
+            sh 'echo "MAVEN_HOME: $MAVEN_HOME"'   
+            sh "which mvn"                       
+            sh "$mvnPath -v"                      
+            sh "$mvnPath test"                    
         }
 
         stage('Deploy') {
-            steps {
-                sh """
-                echo "Deploying..."
-                docker run -d -p 9000:8080 --name jenkins_lab02 ${IMAGE_NAME}:${BUILD_NUMBER}
-                """
-            }
+            sh """
+            echo "Deploying..."
+            docker run -d -p 9000:8080 --name jenkins_lab02 ${IMAGE_NAME}:${BUILD_NUMBER}
+            """
         }
-    }
 
-    post {
-        always {
-            echo 'Pipeline finished'
-        }
-        success {
+    } catch (Exception e) {
+        currentBuild.result = 'FAILURE'
+        throw e
+    } finally {
+
+        echo 'Pipeline finished'
+        if (currentBuild.result == 'SUCCESS') {
             echo 'Build, test, and deployment were successful!'
-        }
-        failure {
+        } else {
             echo 'There was an error'
         }
-        cleanup {
-            echo "Cleaning up Docker containers..."
-            sh "docker rm -f jenkins_lab02 || true"
-            sh "docker rmi ${IMAGE_NAME}:${BUILD_NUMBER} || true"
-        }
 
+        echo "Cleaning up Docker containers..."
+        sh "docker rm -f jenkins_lab02 || true"
+        sh "docker rmi ${IMAGE_NAME}:${BUILD_NUMBER} || true"
     }
 }
