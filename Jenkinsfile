@@ -7,11 +7,9 @@ node('VM_Ubuntu') {
     try {
 
         stage('Checkout') {
-            // Explicitly checkout to ensure repo is cloned since, verify files stage shows only . , .. directories
             checkout scm
         }
 
-        // Verify the existence of Dockerfile
         stage('Verify Files') {
             sh 'ls -al'
         }
@@ -23,7 +21,14 @@ node('VM_Ubuntu') {
             }
         }
 
+        // Ensure Maven build runs to generate the .jar file
+        stage('Maven Build') {
+            echo "Running Maven Build to generate .jar file..."
+            sh "${mvnPath} clean install"
+        }
+
         stage('Docker Build') {
+            echo "Building Docker image ${IMAGE_NAME}:${BUILD_NUMBER}..."
             sh "docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ."
         }
 
