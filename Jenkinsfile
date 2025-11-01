@@ -1,4 +1,5 @@
 @Library('jenkins-shared-library@main') _
+
 pipeline {
     agent {
         node { label 'VM_Ubuntu' }
@@ -7,6 +8,7 @@ pipeline {
     environment {
         JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
         IMAGE_NAME = 'm1zaher/jenkins_day02'
+        BUILD_NUMBER = "${currentBuild.number}"
     }
 
     tools {
@@ -17,11 +19,13 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    echo "Build Number: ${currentBuild.number}"
+                    echo "Build Number: ${BUILD_NUMBER}"
                     if (currentBuild.number < 5) {
-                        error("Build number < 5. exiting...")
+                        error("Build number < 5. Exiting...")
                     }
-                    Maven.buildM()
+
+                    def maven = new edu.iti.Maven()
+                    maven.buildM()  
                 }
             }
         }
@@ -29,7 +33,8 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    Docker.buildD(IMAGE_NAME, BUILD_NUMBER)
+                    def docker = new edu.iti.Docker()
+                    docker.buildD(IMAGE_NAME, BUILD_NUMBER)  
                 }
             }
         }
@@ -38,7 +43,8 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        Docker.login(DOCKER_USERNAME, DOCKER_PASSWORD)
+                        def docker = new edu.iti.Docker()
+                        docker.login(DOCKER_USERNAME, DOCKER_PASSWORD)  
                     }
                 }
             }
@@ -48,7 +54,9 @@ pipeline {
             steps {
                 script {
                     echo "Pushing Docker image ${IMAGE_NAME}:${BUILD_NUMBER}..."
-                    Docker.push(IMAGE_NAME, BUILD_NUMBER)
+
+                    def docker = new edu.iti.Docker()
+                    docker.push(IMAGE_NAME, BUILD_NUMBER)  
                 }
             }
         }
@@ -56,15 +64,16 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    Maven.test()
-                }
+                    def maven = new edu.iti.Maven()
+                    maven.test()  
             }
         }
 
         stage('Deploy') {
             steps {
                 script {
-                    Docker.deploy(IMAGE_NAME, BUILD_NUMBER, 'jenkins_lab02', '9000:8080')
+                    def docker = new edu.iti.Docker()
+                    docker.deploy(IMAGE_NAME, BUILD_NUMBER, 'jenkins_lab02', '9000:8080')  
                 }
             }
         }
