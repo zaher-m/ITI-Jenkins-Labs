@@ -1,6 +1,6 @@
 # ITI Jenkins Labs
 
-This repository contains a Spring Boot application that serves as a demonstration for CI/CD pipelines using Jenkins. Built as part of ITI's Jenkins course.
+This repository contains a Spring Boot application that serves as a demonstration for CI/CD pipelines using Jenkins. All work done built as part of ITI's Jenkins course.
 
 ## Features
 
