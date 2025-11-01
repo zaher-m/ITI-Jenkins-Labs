@@ -5,7 +5,7 @@ node('VM_Ubuntu') {
     def mvnPath = '/usr/bin/mvn'  // full path to executable
 
     try {
-        # Verify the existence of Dockerfile
+        // Verify the existence of Dockerfile
         stage('Verify Files') {
             sh 'ls -al'
         }
