@@ -21,7 +21,7 @@ pipeline {
                     if (currentBuild.number < 5) {
                         error("Build number < 5. exiting...")
                     }
-                    build()
+                    buildM()
                 }
             }
         }
@@ -29,7 +29,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    build(IMAGE_NAME, BUILD_NUMBER)
+                    buildD(IMAGE_NAME, BUILD_NUMBER)
                 }
             }
         }
