@@ -21,7 +21,7 @@ pipeline {
                     if (currentBuild.number < 5) {
                         error("Build number < 5. exiting...")
                     }
-                    buildM()
+                    Maven.buildM()
                 }
             }
         }
@@ -29,7 +29,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    buildD(IMAGE_NAME, BUILD_NUMBER)
+                    Docker.buildD(IMAGE_NAME, BUILD_NUMBER)
                 }
             }
         }
@@ -38,7 +38,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        login(DOCKER_USERNAME, DOCKER_PASSWORD)
+                        Docker.login(DOCKER_USERNAME, DOCKER_PASSWORD)
                     }
                 }
             }
@@ -48,7 +48,7 @@ pipeline {
             steps {
                 script {
                     echo "Pushing Docker image ${IMAGE_NAME}:${BUILD_NUMBER}..."
-                    push(IMAGE_NAME, BUILD_NUMBER)
+                    Docker.push(IMAGE_NAME, BUILD_NUMBER)
                 }
             }
         }
@@ -56,7 +56,7 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    test()
+                    Maven.test()
                 }
             }
         }
@@ -64,7 +64,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    deploy(IMAGE_NAME, BUILD_NUMBER, 'jenkins_lab02', '9000:8080')
+                    Docker.deploy(IMAGE_NAME, BUILD_NUMBER, 'jenkins_lab02', '9000:8080')
                 }
             }
         }
