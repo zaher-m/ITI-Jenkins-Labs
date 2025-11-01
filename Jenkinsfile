@@ -1,76 +1,97 @@
-node('VM_Ubuntu') {
-    env.JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
-    env.IMAGE_NAME = 'm1zaher/jenkins_day02'
+@Library('jenkins-shared-library') _ 
+    agent {
+        node { label "VM_Ubuntu" }
+    }
 
-    def mvnPath = '/usr/bin/mvn'  // full path to executable
+    environment {
+        JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
+        IMAGE_NAME = "m1zaher/jenkins_day02"
+    }
 
-    try {
+    tools {
+        maven 'maven-3.5.2'
+    }
 
-        stage('Checkout') {
-            checkout scm
-        }
-
-        stage('Verify Files') {
-            sh 'ls -al'
-        }
-
+    stages {
         stage('Build') {
-            echo "Build Number: ${currentBuild.number}"
-            if (currentBuild.number < 5) {
-                error("Build number < 5. Exiting...")
+            steps {
+                script {
+                    echo "Build Number: ${currentBuild.number}"
+                    if (currentBuild.number < 5) {
+                        error("Build number < 5. exiting...")
+                    }
+                    // Use the Maven build function from Maven.groovy
+                    edu.iti.Maven.mavenBuild()
+                }
             }
         }
 
-        // Ensure Maven build runs to generate the .jar file
-        stage('Maven Build') {
-            echo "Running Maven Build to generate .jar file..."
-            sh "${mvnPath} clean install"
-        }
-
         stage('Docker Build') {
-            echo "Building Docker image ${IMAGE_NAME}:${BUILD_NUMBER}..."
-            sh "docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ."
+            steps {
+                script {
+                    // Use the Docker build function from Docker.groovy
+                    edu.iti.Docker.build(IMAGE_NAME, BUILD_NUMBER)
+                }
+            }
         }
 
         stage('Docker Login') {
-            withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
+            steps {
+                script {
+                    // Use the Docker login function from Docker.groovy
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        edu.iti.Docker.login(DOCKER_USERNAME, DOCKER_PASSWORD)
+                    }
+                }
             }
         }
 
         stage('Docker Push') {
-            echo "Pushing Docker image ${IMAGE_NAME}:${BUILD_NUMBER}..."
-            sh "docker push ${IMAGE_NAME}:${BUILD_NUMBER}"
+            steps {
+                script {
+                    echo "Pushing Docker image ${IMAGE_NAME}:${BUILD_NUMBER}..."
+                    // Use the Docker push function from Docker.groovy
+                    edu.iti.Docker.push(IMAGE_NAME, BUILD_NUMBER)
+                }
+            }
         }
 
         stage('Test') {
-            sh 'echo "MAVEN_HOME: $MAVEN_HOME"'   
-            sh "which mvn"                       
-            sh "$mvnPath -v"                      
-            sh "$mvnPath test"                    
+            steps {
+                script {
+                    // Use the Maven test function from Maven.groovy
+                    edu.iti.Maven.mavenTest()
+                }
+            }
         }
 
         stage('Deploy') {
-            sh """
-            echo "Deploying..."
-            docker run -d -p 9000:8080 --name jenkins_lab02 ${IMAGE_NAME}:${BUILD_NUMBER}
-            """
+            steps {
+                script {
+                    // Use the Docker deploy function from Docker.groovy
+                    edu.iti.Docker.deploy(IMAGE_NAME, BUILD_NUMBER, 'jenkins_lab02', '9000:8080')
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finished'
         }
 
-    } catch (Exception e) {
-        currentBuild.result = 'FAILURE'
-        throw e
-    } finally {
-
-        echo 'Pipeline finished'
-        if (currentBuild.result == 'SUCCESS') {
+        success {
             echo 'Build, test, and deployment were successful!'
-        } else {
+        }
+
+        failure {
             echo 'There was an error'
         }
 
-        echo "Cleaning up Docker containers..."
-        sh "docker rm -f jenkins_lab02 || true"
-        sh "docker rmi ${IMAGE_NAME}:${BUILD_NUMBER} || true"
+        cleanup {
+            echo "Cleaning up Docker containers..."
+            sh "docker rm -f jenkins_lab02 || true"
+            sh "docker rmi ${IMAGE_NAME}:${BUILD_NUMBER} || true"
+        }
     }
 }
