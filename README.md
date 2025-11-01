@@ -1,59 +1,58 @@
-# Java App - Training and Education for DevOps Pipeline
+# ITI Jenkins Labs
 
-Welcome to the **Java App** repository! This project is designed for training and educational purposes, specifically aimed at providing a hands-on experience for DevOps engineers to create and manage pipelines. In this repository, you will find a containerized Java application that serves as a starting point for learning DevOps practices.
+This repository contains a Spring Boot application that serves as a demonstration for CI/CD pipelines using Jenkins.
 
-## Table of Contents
+## Features
 
-- [Project Overview](#project-overview)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Creating a Pipeline](#creating-a-pipeline)
-- [Contributing](#contributing)
-- [License](#license)
+- Integrated with Jenkins for automated build, test, and deployment.
+- Includes both declarative and scripted Jenkins pipelines.
+- Uses Docker to containerize the application for easy deployment.
 
-## Project Overview
+## CI/CD Pipelines
 
-This Java application is a simple example to help DevOps engineers understand how to work with Java apps in a containerized environment. It can be used as a learning tool for creating and managing CI/CD pipelines and deploying Java applications to various environments.
+This project includes two types of Jenkins pipelines: a declarative pipeline (`Jenkinsfile`) and a scripted pipeline (`JenkinsfileScripted`). Both pipelines automate the process of building, testing, and deploying the application.
 
-## Installation
+### Declarative Pipeline (`Jenkinsfile`)
 
-To get started, follow these steps:
+The declarative pipeline is defined in the `Jenkinsfile` and uses a more structured, opinionated syntax. It leverages a shared library (`jenkins-shared-library`) to reuse code and maintain a cleaner pipeline definition.
 
-1. **Clone the repository**:
+**Pipeline Stages:**
 
-    ```shell
-    git clone https://github.com/Hassan-Eid-Hassan/java.git
-    cd your-repo
-    ```
+1.  **Build**: Compiles the application using Maven. It also includes a check to ensure the build number is greater than or equal to 5.
+2.  **Docker Build**: Builds a Docker image of the application.
+3.  **Docker Login**: Logs in to Docker Hub using stored credentials.
+4.  **Docker Push**: Pushes the Docker image to Docker Hub.
+5.  **Test**: Runs the application's tests using Maven.
+6.  **Deploy**: Deploys the application as a Docker container.
 
-2. **Build the Docker image**:
+**Pipeline Configuration:**
 
-    ```shell
-    docker build -t java-app .
-    ```
+![Shared Library Pipeline Status](assets/SharedLibrary_Configurations.png)
 
-3. **Run the Docker container**:
+**Successful Build:**
 
-    ```shell
-    docker run -d -p 8090:8090 java-app
-    ```
+![Declarative Pipeline Build Success](assets/SharedLibrary_Build_Success.png)
 
-## Usage
+### Scripted Pipeline (`JenkinsfileScripted`)
 
-Once the container is running, the Java application should be accessible at `http://localhost:8080`. You can interact with the application through the provided endpoints.
+The scripted pipeline, defined in `JenkinsfileScripted`, uses Groovy syntax and provides more flexibility and control over the pipeline's execution.
 
-## Creating a Pipeline
+**Pipeline Stages:**
 
-This repository serves as a learning platform for creating a DevOps pipeline. You can experiment with various CI/CD tools such as GitHub Actions, Jenkins, or GitLab CI/CD to create a pipeline that builds, tests, and deploys the Java application. 
+1.  **Checkout**: Checks out the source code from the repository.
+2.  **Verify Files**: Lists the files in the workspace.
+3.  **Build**: Checks the build number.
+4.  **Maven Build**: Compiles the application and packages it as a `.jar` file.
+5.  **Docker Build**: Builds a Docker image.
+6.  **Docker Login**: Logs in to Docker Hub.
+7.  **Docker Push**: Pushes the Docker image to Docker Hub.
+8.  **Test**: Runs the application's tests.
+9.  **Deploy**: Deploys the application as a Docker container.
 
-For example, you might:
+**Pipeline Configuration:**
 
-- **Build** the application using Maven or Gradle.
-- **Test** the application using JUnit or other testing frameworks.
-- **Deploy** the containerized application to a staging or production environment.
+![Scripted Pipeline Configuration](assets/ScriptedPipeline_Configuration.png)
 
-Feel free to explore and customize the pipeline according to your learning goals.
+**Successful Build:**
 
-## Contributing
-
-Contributions are welcome! If you find issues or have suggestions for improvements, please feel free to open an issue or submit a pull request.
+![Scripted Pipeline Build Success](assets/ScriptedPipeline_Build_Success.png)
