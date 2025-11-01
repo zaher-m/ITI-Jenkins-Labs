@@ -7,10 +7,8 @@ node('VM_Ubuntu') {
     try {
 
         stage('Checkout') {
-            steps {
-                // Explicitly checkout to ensure repo is cloned since, verify files stage shows only . , .. directories
-                checkout scm
-            }
+            // Explicitly checkout to ensure repo is cloned since, verify files stage shows only . , .. directories
+            checkout scm
         }
 
         // Verify the existence of Dockerfile
