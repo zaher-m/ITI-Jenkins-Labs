@@ -21,8 +21,7 @@ pipeline {
                     if (currentBuild.number < 5) {
                         error("Build number < 5. exiting...")
                     }
-                    // Call the Maven build function from the shared library
-                    edu.iti.Maven.mavenBuild()
+                    build()
                 }
             }
         }
@@ -30,8 +29,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    // Call the Docker build function from the shared library
-                    edu.iti.Docker.build(IMAGE_NAME, BUILD_NUMBER)
+                    build(IMAGE_NAME, BUILD_NUMBER)
                 }
             }
         }
@@ -40,8 +38,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        // Call Docker login function from the shared library
-                        edu.iti.Docker.login(DOCKER_USERNAME, DOCKER_PASSWORD)
+                        login(DOCKER_USERNAME, DOCKER_PASSWORD)
                     }
                 }
             }
@@ -51,8 +48,7 @@ pipeline {
             steps {
                 script {
                     echo "Pushing Docker image ${IMAGE_NAME}:${BUILD_NUMBER}..."
-                    // Call Docker push function from the shared library
-                    edu.iti.Docker.push(IMAGE_NAME, BUILD_NUMBER)
+                    push(IMAGE_NAME, BUILD_NUMBER)
                 }
             }
         }
@@ -60,8 +56,7 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Call the Maven test function from the shared library
-                    edu.iti.Maven.mavenTest()
+                    test()
                 }
             }
         }
@@ -69,8 +64,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Call Docker deploy function from the shared library
-                    edu.iti.Docker.deploy(IMAGE_NAME, BUILD_NUMBER, 'jenkins_lab02', '9000:8080')
+                    deploy(IMAGE_NAME, BUILD_NUMBER, 'jenkins_lab02', '9000:8080')
                 }
             }
         }
