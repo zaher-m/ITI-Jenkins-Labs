@@ -2,10 +2,7 @@ node('VM_Ubuntu') {
     env.JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
     env.IMAGE_NAME = 'm1zaher/jenkins_day02'
 
-    // Set MAVEN_HOME explicitly to the directory containing mvn
-    env.MAVEN_HOME = '/usr'
-
-    tool name: 'maven-3.5.2', type: 'Maven'
+    def mvnPath = '/usr/bin/mvn'  // full path to executable
 
     try {
         stage('Build') {
@@ -31,10 +28,10 @@ node('VM_Ubuntu') {
         }
 
         stage('Test') {
-            sh 'echo "MAVEN_HOME: $MAVEN_HOME"'  
-            sh 'which mvn'                      
-            sh 'mvn -v'                         
-            sh 'mvn test'                       
+            sh 'echo "MAVEN_HOME: $MAVEN_HOME"'   
+            sh "which mvn"                       
+            sh "$mvnPath -v"                      
+            sh "$mvnPath test"                    
         }
 
         stage('Deploy') {
