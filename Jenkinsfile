@@ -3,7 +3,7 @@ pipeline {
         node { label "VM_Ubuntu" }
     }
     environment {
-        JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64/bin/java'
+        JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
     }
 
     stages {
