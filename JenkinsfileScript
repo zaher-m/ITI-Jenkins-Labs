@@ -5,6 +5,14 @@ node('VM_Ubuntu') {
     def mvnPath = '/usr/bin/mvn'  // full path to executable
 
     try {
+
+        stage('Checkout') {
+            steps {
+                // Explicitly checkout to ensure repo is cloned since, verify files stage shows only . , .. directories
+                checkout scm
+            }
+        }
+
         // Verify the existence of Dockerfile
         stage('Verify Files') {
             sh 'ls -al'
