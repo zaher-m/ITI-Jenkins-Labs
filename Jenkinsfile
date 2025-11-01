@@ -25,7 +25,7 @@ pipeline {
                     }
 
                     def maven = new edu.iti.Maven()
-                    maven.buildM()  
+                    maven.buildM()
                 }
             }
         }
@@ -34,7 +34,7 @@ pipeline {
             steps {
                 script {
                     def docker = new edu.iti.Docker()
-                    docker.buildD(IMAGE_NAME, BUILD_NUMBER)  
+                    docker.buildD(IMAGE_NAME, BUILD_NUMBER)
                 }
             }
         }
@@ -44,7 +44,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         def docker = new edu.iti.Docker()
-                        docker.login(DOCKER_USERNAME, DOCKER_PASSWORD)  
+                        docker.login(DOCKER_USERNAME, DOCKER_PASSWORD)
                     }
                 }
             }
@@ -56,7 +56,7 @@ pipeline {
                     echo "Pushing Docker image ${IMAGE_NAME}:${BUILD_NUMBER}..."
 
                     def docker = new edu.iti.Docker()
-                    docker.push(IMAGE_NAME, BUILD_NUMBER)  
+                    docker.push(IMAGE_NAME, BUILD_NUMBER)
                 }
             }
         }
@@ -65,7 +65,8 @@ pipeline {
             steps {
                 script {
                     def maven = new edu.iti.Maven()
-                    maven.test()  
+                    maven.test()
+                }
             }
         }
 
@@ -73,7 +74,7 @@ pipeline {
             steps {
                 script {
                     def docker = new edu.iti.Docker()
-                    docker.deploy(IMAGE_NAME, BUILD_NUMBER, 'jenkins_lab02', '9000:8080')  
+                    docker.deploy(IMAGE_NAME, BUILD_NUMBER, 'jenkins_lab02', '9000:8080')
                 }
             }
         }
@@ -98,5 +99,4 @@ pipeline {
             sh "docker rmi ${IMAGE_NAME}:${BUILD_NUMBER} || true"
         }
     }
-}
 }
